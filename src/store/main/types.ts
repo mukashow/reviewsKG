@@ -1,6 +1,11 @@
 export type Service = {
-  value: string;
-  label: string;
+  id: string;
+  title: string;
+};
+
+export type ServiceSelect = {
+  value: string | number;
+  title: string;
 };
 
 export type User = {

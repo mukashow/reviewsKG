@@ -1,48 +1,22 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import firestore from '@react-native-firebase/firestore';
 import { Service, User } from './types';
+import { api } from '../../api';
 
-export const fetchAllServices = createAsyncThunk('main/fetchAllServices', async () => {
+export const fetchAllServices = createAsyncThunk<Service[]>('main/fetchAllServices', async () => {
   try {
-    const services: Service[] = [];
-    const snapshots = await firestore().collection('service').get();
-
-    snapshots.forEach(doc => {
-      services.push({
-        label: doc.data().title,
-        value: doc.id,
-      });
-    });
-
-    return services;
+    return (await api('/services')).data;
   } catch (e) {
     console.log(e);
   }
 });
 
-export const searchUsers = createAsyncThunk(
+export const searchUsers = createAsyncThunk<User[], { phone: string; service: Service | null }>(
   'main/searchUserService',
-  async ({ phone }: { phone: string }) => {
+  async ({ phone, service }) => {
     try {
-      const users: User[] = [];
-
-      const snapshots = await firestore()
-        .collection('users')
-        .where('phone', '>=', phone)
-        .where('phone', '<=', phone + '\uf8ff')
-        .get();
-
-      snapshots.forEach(doc => {
-        users.push(<User>{
-          ...doc.data(),
-          id: doc.id,
-        });
-      });
-
-      return users;
+      return (await api(`/users/search/users/?q=%2b996${phone}&service=${service}`)).data;
     } catch (e) {
       console.log(e);
-      return null;
     }
   }
 );

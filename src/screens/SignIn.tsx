@@ -66,7 +66,7 @@ export const SignIn = ({
           onPress={signInWithPhoneNumber}
           style={{ marginBottom: 10 }}
         />
-        <Button label="Зарегистрироваться" onPress={() => navigate('SignUp')} hyperlink />
+        {/*<Button label="Зарегистрироваться" onPress={() => navigate('SignUp')} hyperlink />*/}
       </View>
     </Container>
   );

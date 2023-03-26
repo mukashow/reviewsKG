@@ -3,11 +3,11 @@ import { fetchAllServices } from './action';
 import { Service } from './types';
 
 type State = {
-  services: Service[];
+  services: Service[] | null;
 };
 
 const initialState: State = {
-  services: [],
+  services: null,
 };
 
 export const main = createSlice({
@@ -16,7 +16,7 @@ export const main = createSlice({
   reducers: {},
   extraReducers: builder => {
     builder.addCase(fetchAllServices.fulfilled, (state, { payload }) => {
-      state.services = payload!;
+      state.services = payload;
     });
   },
 });

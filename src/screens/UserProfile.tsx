@@ -1,7 +1,6 @@
 import React, { FC, useEffect, useRef, useState } from 'react';
 import { NavigationProp, RouteProp } from '@react-navigation/native';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import auth from '@react-native-firebase/auth';
 import { Colors, Text } from 'react-native-ui-lib';
 import { Button, Container, Modal } from '../components';
 import { useAppDispatch, useAppSelector } from '../store';
@@ -16,9 +15,10 @@ interface Props {
 type Status = 'loading' | 'error' | 'delete' | '';
 
 export const UserProfile: FC<Props> = ({ navigation, route: { params } }) => {
+  const userPhone = useAppSelector(state => state.auth.phone);
   const reviews = useAppSelector(state => state.reviews.reviews);
   const [status, setStatus] = useState<Status>('');
-  const reviewId = useRef('');
+  const reviewId = useRef<null | number>(null);
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export const UserProfile: FC<Props> = ({ navigation, route: { params } }) => {
         visible={status === 'delete'}
         close={() => setStatus('')}
         onSubmit={() =>
-          dispatch(deleteReview({ id: reviewId.current, phone: params!.phone })).then(() =>
+          dispatch(deleteReview({ id: reviewId.current!, phone: params!.phone })).then(() =>
             setStatus('')
           )
         }
@@ -44,7 +44,9 @@ export const UserProfile: FC<Props> = ({ navigation, route: { params } }) => {
       <Button
         label="Оставить отзыв"
         style={{ marginBottom: 40 }}
-        onPress={() => navigation.navigate('LeaveReviewToUser', { phone: params!.phone })}
+        onPress={() =>
+          navigation.navigate('LeaveReviewToUser', { phone: params!.phone.replace('+996', '') })
+        }
       />
       <Text style={{ marginBottom: 5 }} text65>
         Отзывы
@@ -69,11 +71,9 @@ export const UserProfile: FC<Props> = ({ navigation, route: { params } }) => {
           <View style={{ flex: 1 }}>
             <View style={style.reviewTop}>
               <Text text70 style={style.reviewTitle}>
-                {auth().currentUser?.phoneNumber?.replace('+996', '') === author
-                  ? `Я (${auth().currentUser?.phoneNumber?.replace('+996', '')})`
-                  : author}
+                {userPhone === author ? `Я (${userPhone})` : author}
               </Text>
-              <Text style={{ fontSize: 12 }}>{createdAt}</Text>
+              <Text style={{ fontSize: 12 }}>{new Date(createdAt).toLocaleDateString()}</Text>
             </View>
             <Text style={{ marginVertical: 5 }}>{review}</Text>
             {rating ? (
@@ -83,7 +83,7 @@ export const UserProfile: FC<Props> = ({ navigation, route: { params } }) => {
               </Text>
             ) : null}
           </View>
-          {author === auth().currentUser?.phoneNumber?.replace('+996', '') ? (
+          {author === userPhone ? (
             <Trash
               width={20}
               height={20}

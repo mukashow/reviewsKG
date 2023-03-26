@@ -1,19 +1,18 @@
-import { Service } from '../main/types';
-import { FirebaseFirestoreTypes } from '@react-native-firebase/firestore';
-import Timestamp = FirebaseFirestoreTypes.Timestamp;
+import { ServiceSelect } from '../main/types';
 
 export type Review = {
-  id: string;
-  phone: string;
-  review: string;
-  service: Service | null;
-  rating: number;
+  id: number;
   author: string;
+  serviceProviderPhone: string;
+  review: string;
+  service: number | null;
+  rating: number;
   createdAt: string;
 };
 
-export type FirebaseReview = Omit<Review, 'createdAt'> & {
-  createdAt: Timestamp;
+export type ReviewCreateForm = {
+  serviceProviderPhone: string;
+  review: string;
+  service: ServiceSelect | null;
+  rating: number;
 };
-
-export type ReviewToSend = Omit<Review, 'id' | 'createdAt'>;

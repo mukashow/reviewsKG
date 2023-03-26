@@ -6,9 +6,11 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import auth from '@react-native-firebase/auth';
 import { Colors } from 'react-native-ui-lib';
-import { CodeVerification, Home, SignIn, SignUp, UserProfile } from './screens';
-import { LeaveReview } from './screens/LeaveReview';
-import { store } from './store';
+import { CodeVerification, Home, SignIn, SignUp, UserProfile, LeaveReview } from './screens';
+import { store, useAppDispatch } from './store';
+import { fetchAllServices } from './store/main/action';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { setUserInfo } from './store/auth/slice';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -47,12 +49,21 @@ const MainTab = () => {
 export const App = () => {
   const [loading, setLoading] = useState(true);
   const [isAuth, setIsAuth] = useState(false);
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
+    dispatch(fetchAllServices());
     auth().onAuthStateChanged(user => {
       setIsAuth(!!user);
       setLoading(false);
     });
+    (async () => {
+      const [phone, services] = await Promise.all([
+        AsyncStorage.getItem('phone'),
+        AsyncStorage.getItem('services'),
+      ]);
+      dispatch(setUserInfo({ phone, services }));
+    })();
   }, []);
 
   if (loading) {
@@ -60,34 +71,40 @@ export const App = () => {
   }
 
   return (
+    <NavigationContainer theme={MyTheme}>
+      <StatusBar barStyle="light-content" />
+      {isAuth ? (
+        <Tab.Navigator>
+          <Tab.Screen
+            name="Home"
+            component={MainTab}
+            options={{ header: () => null, tabBarLabel: 'Главная' }}
+          />
+          <Tab.Screen
+            name="LeaveReview"
+            component={LeaveReview}
+            options={{ title: 'Оставить отзыв' }}
+          />
+        </Tab.Navigator>
+      ) : (
+        <Stack.Navigator>
+          <Stack.Screen name="SignIn" component={SignIn} options={{ title: 'Войти' }} />
+          <Stack.Screen name="SignUp" component={SignUp} options={{ title: 'Регистрация' }} />
+          <Stack.Screen
+            name="CodeVerification"
+            component={CodeVerification}
+            options={{ title: 'Подтвердить код' }}
+          />
+        </Stack.Navigator>
+      )}
+    </NavigationContainer>
+  );
+};
+
+export const AppProvider = () => {
+  return (
     <Provider store={store}>
-      <NavigationContainer theme={MyTheme}>
-        <StatusBar barStyle="light-content" />
-        {isAuth ? (
-          <Tab.Navigator>
-            <Tab.Screen
-              name="Home"
-              component={MainTab}
-              options={{ header: () => null, tabBarLabel: 'Главная' }}
-            />
-            <Tab.Screen
-              name="LeaveReview"
-              component={LeaveReview}
-              options={{ title: 'Оставить отзыв' }}
-            />
-          </Tab.Navigator>
-        ) : (
-          <Stack.Navigator>
-            <Stack.Screen name="SignIn" component={SignIn} options={{ title: 'Войти' }} />
-            <Stack.Screen name="SignUp" component={SignUp} options={{ title: 'Регистрация' }} />
-            <Stack.Screen
-              name="CodeVerification"
-              component={CodeVerification}
-              options={{ title: 'Подтвердить код' }}
-            />
-          </Stack.Navigator>
-        )}
-      </NavigationContainer>
+      <App />
     </Provider>
   );
 };

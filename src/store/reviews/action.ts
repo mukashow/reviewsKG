@@ -1,53 +1,31 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import firestore, { firebase } from '@react-native-firebase/firestore';
-import { FirebaseReview, Review, ReviewToSend } from './types';
+import { Review, ReviewCreateForm } from './types';
+import { api } from '../../api';
+import { RootState } from '../index';
 
-export const fetchReviews = createAsyncThunk(
+export const fetchReviews = createAsyncThunk<Review[], { phone: string }>(
   'main/fetchReviews',
-  async ({ phone }: { phone: string }) => {
+  async ({ phone }) => {
     try {
-      const reviews: Review[] = [];
-      const snapshots = await firestore().collection('reviews').where('phone', '==', phone).get();
-
-      snapshots.forEach(doc => {
-        const data = <FirebaseReview>doc.data();
-        reviews.push({
-          ...data,
-          id: doc.id,
-          createdAt: new Date(data.createdAt.toDate()).toLocaleDateString(),
-        });
-      });
-
-      return reviews;
+      return (await api(`/reviews/${phone.replace('+', '%2b')}`)).data;
     } catch (e) {
       console.log(e);
-      return null;
     }
   }
 );
 
 export const sendReview = createAsyncThunk(
   'main/sendReview',
-  async ({ phone, review, rating, service, author }: ReviewToSend, { dispatch }) => {
+  async ({ service, serviceProviderPhone, ...form }: ReviewCreateForm, { getState }) => {
     try {
-      await firestore().collection('reviews').add({
-        phone,
-        review,
-        rating,
-        service,
-        author,
-        createdAt: firebase.firestore.Timestamp.now(),
+      const { auth } = getState() as RootState;
+      const { data } = await api.post('/reviews', {
+        ...form,
+        service: service ? service.value : null,
+        author: `${auth.phone}`,
+        serviceProviderPhone: `+996${serviceProviderPhone}`,
       });
-      const userSnapshots = await firestore().collection('users').where('phone', '==', phone).get();
-      if (userSnapshots.size === 0) {
-        await firestore()
-          .collection('users')
-          .add({
-            phone,
-            services: service ? [service] : [],
-          });
-      }
-      dispatch(fetchReviews({ phone }));
+      console.log(data);
     } catch (e) {
       console.log(e);
     }
@@ -56,9 +34,9 @@ export const sendReview = createAsyncThunk(
 
 export const deleteReview = createAsyncThunk(
   'main/deleteReview',
-  async ({ id, phone }: { id: string; phone: string }, { dispatch }) => {
+  async ({ id, phone }: { id: number; phone: string }, { dispatch }) => {
     try {
-      await firestore().collection('reviews').doc(id).delete();
+      await api.delete(`/reviews/${id}`);
       dispatch(fetchReviews({ phone }));
     } catch (e) {
       console.log(e);

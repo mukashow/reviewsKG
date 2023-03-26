@@ -1,22 +1,32 @@
-import React, { useCallback, useState } from 'react';
-import { Colors, Incubator, Text } from 'react-native-ui-lib';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Colors, Incubator, Picker, Text } from 'react-native-ui-lib';
 import { NavigationProp } from '@react-navigation/native';
 import { debounce } from 'lodash';
 import { Container } from '../components';
-import { useAppDispatch } from '../store';
+import { useAppDispatch, useAppSelector } from '../store';
 import { searchUsers } from '../store/main/action';
-import { User } from '../store/main/types';
+import { Service, User } from '../store/main/types';
 import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
 
+type Form = {
+  phone: string;
+  service: Service | null;
+};
+
 export const Home = ({ navigation: { navigate } }: { navigation: NavigationProp<any> }) => {
+  const services = useAppSelector(state => state.main.services);
   const [status, setStatus] = useState('');
+  const [form, setForm] = useState<Form>({
+    phone: '',
+    service: null,
+  });
   const [users, setUsers] = useState<User[] | null>(null);
   const dispatch = useAppDispatch();
 
   const debounceHandler = useCallback(
     debounce((phone: string) => {
       if (phone.length > 2) {
-        return dispatch(searchUsers({ phone }))
+        return dispatch(searchUsers({ phone, service: form.service }))
           .unwrap()
           .then(users => {
             setUsers(users);
@@ -26,19 +36,31 @@ export const Home = ({ navigation: { navigate } }: { navigation: NavigationProp<
       setUsers([]);
       setStatus('');
     }, 300),
-    []
+    [form]
   );
 
-  const onChangeText = (phone: string) => {
-    if (phone.length > 2) setStatus('loading');
-    debounceHandler(phone);
-  };
+  useEffect(() => {
+    if (form.phone.length > 2) setStatus('loading');
+    debounceHandler(form.phone);
+  }, [form]);
 
   return (
     <Container>
+      <Picker
+        title="Сфера услуги"
+        titleStyle={{ color: Colors.$textDefault }}
+        value={form.service}
+        placeholder="Выбрать"
+        onChange={(service: Service) => setForm({ ...form, service })}
+        containerStyle={{ height: 60 }}
+      >
+        {services?.map(({ id, title }) => (
+          <Picker.Item key={id} value={id} label={title} />
+        ))}
+      </Picker>
       <Incubator.TextField
         floatingPlaceholder
-        onChangeText={onChangeText}
+        onChangeText={(phone: string) => setForm({ ...form, phone })}
         placeholder="Введите номер телефона"
         keyboardType="numeric"
         preset="default"
@@ -67,7 +89,7 @@ export const Home = ({ navigation: { navigate } }: { navigation: NavigationProp<
             <Text text70>{item.phone}</Text>
             <Text text80>
               {item.services.length
-                ? item.services.map(({ label }) => label).join(', ')
+                ? item.services.map(({ title }) => title).join(', ')
                 : 'Нет добавленных услуг'}
             </Text>
           </TouchableOpacity>

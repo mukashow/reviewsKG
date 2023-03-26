@@ -2,19 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { NativeSyntheticEvent, TextInputContentSizeChangeEventData } from 'react-native';
 import { Colors, Incubator, Picker, Stepper, Text } from 'react-native-ui-lib';
 import { NavigationProp, RouteProp } from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
 import { Button, Container, Toast } from '../components';
 import { useAppDispatch, useAppSelector } from '../store';
-import { fetchAllServices } from '../store/main/action';
 import { sendReview } from '../store/reviews/action';
-import { Service } from '../store/main/types';
-
-type Form = {
-  phone: string;
-  review: string;
-  service: Service | null;
-  rating: number;
-};
+import { ServiceSelect } from '../store/main/types';
+import { ReviewCreateForm } from '../store/reviews/types';
 
 interface Props {
   navigation: NavigationProp<any>;
@@ -29,8 +21,8 @@ export const LeaveReview = ({ navigation, route: { params, name } }: Props) => {
     message: '',
   });
 
-  const [form, setForm] = useState<Form>({
-    phone: params?.phone || '',
+  const [form, setForm] = useState<ReviewCreateForm>({
+    serviceProviderPhone: params?.phone || '',
     review: '',
     service: null,
     rating: 0,
@@ -38,20 +30,14 @@ export const LeaveReview = ({ navigation, route: { params, name } }: Props) => {
   const dispatch = useAppDispatch();
 
   const onSendReview = () => {
-    if (form.phone.length !== 9) {
+    if (form.serviceProviderPhone.length !== 9) {
       return setStatus({ status: 'error', message: 'Заполните номер телефона' });
     }
     if (!form.review) {
       return setStatus({ status: 'error', message: 'Оставьте отзыв' });
     }
     setStatus({ status: 'loading', message: '' });
-    dispatch(
-      sendReview({
-        ...form,
-        service: form.service,
-        author: auth().currentUser?.phoneNumber?.replace('+996', '') || '',
-      })
-    ).then(() => {
+    dispatch(sendReview(form)).then(() => {
       if (name === 'LeaveReviewToUser') {
         navigation.goBack();
       }
@@ -60,15 +46,14 @@ export const LeaveReview = ({ navigation, route: { params, name } }: Props) => {
   };
 
   useEffect(() => {
-    setForm(state => ({ ...state, phone: state.phone.replace(/[^0-9]/g, '') }));
-  }, [form.phone]);
+    setForm(state => ({ ...state, phone: state.serviceProviderPhone.replace(/[^0-9]/g, '') }));
+  }, [form.serviceProviderPhone]);
 
   useEffect(() => {
-    dispatch(fetchAllServices());
     return navigation.addListener('blur', () => {
       if (name === 'LeaveReview') {
         setForm({
-          phone: '',
+          serviceProviderPhone: '',
           review: '',
           service: null,
           rating: 0,
@@ -89,8 +74,10 @@ export const LeaveReview = ({ navigation, route: { params, name } }: Props) => {
         labelStyle={{ color: name === 'LeaveReview' ? Colors.grey10 : Colors.grey40 }}
         label="+996"
         placeholder="Номер телефона услуги"
-        value={form.phone}
-        onChangeText={(phone: string) => setForm(state => ({ ...state, phone }))}
+        value={form.serviceProviderPhone}
+        onChangeText={(serviceProviderPhone: string) =>
+          setForm(state => ({ ...state, serviceProviderPhone }))
+        }
         keyboardType="numeric"
         preset="default"
         maxLength={9}
@@ -110,10 +97,10 @@ export const LeaveReview = ({ navigation, route: { params, name } }: Props) => {
         titleStyle={{ color: Colors.$textDefault }}
         value={form.service}
         placeholder="Выбрать"
-        onChange={(service: Service) => setForm(state => ({ ...state, service }))}
+        onChange={(service: ServiceSelect) => setForm(state => ({ ...state, service }))}
       >
-        {services.map(({ value, label }) => (
-          <Picker.Item key={value} value={value} label={label} />
+        {services?.map(({ id, title }) => (
+          <Picker.Item key={id} value={id} label={title} />
         ))}
       </Picker>
       <Text style={{ marginBottom: 10 }}>Рейтинг</Text>

@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { ReactNativeFirebase } from '@react-native-firebase/app';
 import { FirebaseAuthTypes } from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
 import { NavigationProp, RouteProp, StackActions } from '@react-navigation/native';
 import { Incubator } from 'react-native-ui-lib';
 import { Button, Container, Toast } from '../components';
+import { useAppDispatch } from '../store';
+import { signIn } from '../store/auth/action';
 
 interface Props {
   navigation: NavigationProp<any>;
@@ -18,25 +19,13 @@ export const CodeVerification = ({ navigation: { dispatch }, route: { params } }
     status: 'init',
     message: '',
   });
+  const reduxDispatch = useAppDispatch();
 
   const confirmCode = async () => {
     setStatus({ status: 'loading', message: '' });
     try {
-      const { user, additionalUserInfo }: FirebaseAuthTypes.UserCredential =
-        await params!.confirmation.confirm(code);
-      if (additionalUserInfo?.isNewUser) {
-        const userSnapshots = await firestore()
-          .collection('users')
-          .where('phone', '==', user.phoneNumber)
-          .get();
-        if (userSnapshots.size === 0) {
-          await firestore()
-            .collection('users')
-            .doc(`${user.uid}`)
-            .set({ services: [], phone: user.phoneNumber });
-        }
-      }
-      dispatch(StackActions.replace('Home'));
+      const { user }: FirebaseAuthTypes.UserCredential = await params!.confirmation.confirm(code);
+      await reduxDispatch(signIn(user));
     } catch (e) {
       const error = e as ReactNativeFirebase.NativeFirebaseError;
       setStatus({

@@ -3,3 +3,4 @@ export { SignUp } from './SignUp';
 export { CodeVerification } from './CodeVerification';
 export { Home } from './Home';
 export { UserProfile } from './UserProfile';
+export { LeaveReview } from './LeaveReview';

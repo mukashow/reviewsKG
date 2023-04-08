@@ -6,7 +6,14 @@ import { Container } from '../components';
 import { useAppDispatch, useAppSelector } from '../store';
 import { searchUsers } from '../store/main/action';
 import { Service, User } from '../store/main/types';
-import { ActivityIndicator, FlatList, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 type Form = {
   phone: string;
@@ -15,6 +22,7 @@ type Form = {
 
 export const Home = ({ navigation: { navigate } }: { navigation: NavigationProp<any> }) => {
   const services = useAppSelector(state => state.main.services);
+  const [slideOpen, setSlideOpen] = useState(false);
   const [status, setStatus] = useState('');
   const [form, setForm] = useState<Form>({
     phone: '',
@@ -46,18 +54,27 @@ export const Home = ({ navigation: { navigate } }: { navigation: NavigationProp<
 
   return (
     <Container>
-      <Picker
-        title="Сфера услуги"
-        titleStyle={{ color: Colors.$textDefault }}
-        value={form.service}
-        placeholder="Выбрать"
-        onChange={(service: Service) => setForm({ ...form, service })}
-        containerStyle={{ height: 60 }}
-      >
-        {services?.map(({ id, title }) => (
-          <Picker.Item key={id} value={id} label={title} />
-        ))}
-      </Picker>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Picker
+          style={{ width: '100%' }}
+          title="Сфера услуги"
+          titleStyle={{ color: Colors.$textDefault }}
+          value={form.service}
+          placeholder="Выбрать"
+          onChange={(service: Service) => setForm({ ...form, service })}
+          containerStyle={{ height: 60 }}
+        >
+          {services?.map(({ id, title }) => (
+            <Picker.Item key={id} value={id} label={title} />
+          ))}
+        </Picker>
+        <Pressable
+          style={{ marginLeft: -100, marginBottom: 30 }}
+          onPress={() => setForm(state => ({ ...state, service: null }))}
+        >
+          <Text>Очистить</Text>
+        </Pressable>
+      </View>
       <Incubator.TextField
         floatingPlaceholder
         onChangeText={(phone: string) => setForm({ ...form, phone })}

@@ -1,5 +1,5 @@
 export type Service = {
-  id: string;
+  id: number;
   title: string;
 };
 

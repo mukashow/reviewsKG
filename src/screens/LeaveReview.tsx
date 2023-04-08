@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { NativeSyntheticEvent, TextInputContentSizeChangeEventData } from 'react-native';
+import {
+  NativeSyntheticEvent,
+  Pressable,
+  TextInputContentSizeChangeEventData,
+  View,
+} from 'react-native';
 import { Colors, Incubator, Picker, Stepper, Text } from 'react-native-ui-lib';
 import { NavigationProp, RouteProp } from '@react-navigation/native';
 import { Button, Container, Toast } from '../components';
@@ -42,6 +47,7 @@ export const LeaveReview = ({ navigation, route: { params, name } }: Props) => {
         navigation.goBack();
       }
       setStatus({ status: 'init', message: '' });
+      navigation.navigate('Home');
     });
   };
 
@@ -92,17 +98,26 @@ export const LeaveReview = ({ navigation, route: { params, name } }: Props) => {
         preset="default"
         multiline
       />
-      <Picker
-        title="Сфера услуги"
-        titleStyle={{ color: Colors.$textDefault }}
-        value={form.service}
-        placeholder="Выбрать"
-        onChange={(service: ServiceSelect) => setForm(state => ({ ...state, service }))}
-      >
-        {services?.map(({ id, title }) => (
-          <Picker.Item key={id} value={id} label={title} />
-        ))}
-      </Picker>
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <Picker
+          style={{ width: '100%' }}
+          title="Сфера услуги"
+          titleStyle={{ color: Colors.$textDefault }}
+          value={form.service}
+          placeholder="Выбрать"
+          onChange={(service: ServiceSelect) => setForm(state => ({ ...state, service }))}
+        >
+          {services?.map(({ id, title }) => (
+            <Picker.Item key={id} value={id} label={title} />
+          ))}
+        </Picker>
+        <Pressable
+          style={{ marginLeft: -100, marginBottom: 30 }}
+          onPress={() => setForm(state => ({ ...state, service: null }))}
+        >
+          <Text>Очистить</Text>
+        </Pressable>
+      </View>
       <Text style={{ marginBottom: 10 }}>Рейтинг</Text>
       <Stepper
         minValue={1}

@@ -1,18 +1,20 @@
 import React, { FC } from 'react';
-import { ScrollView, StyleSheet, View, ViewStyle } from 'react-native';
+import { ScrollView, ScrollViewProps, StyleSheet, View, ViewStyle } from 'react-native';
 
 interface Props {
   children: React.ReactNode;
   customStyle?: ViewStyle;
   scroll?: boolean;
+  scrollProps?: ScrollViewProps;
 }
 
-export const Container: FC<Props> = ({ children, scroll, customStyle = {} }) => {
+export const Container: FC<Props> = ({ children, scroll, customStyle = {}, scrollProps = {} }) => {
   if (scroll) {
     return (
       <ScrollView
         contentContainerStyle={{ paddingVertical: 16 }}
         style={[style.root, customStyle, { paddingVertical: 0 }]}
+        {...scrollProps}
       >
         {children}
       </ScrollView>

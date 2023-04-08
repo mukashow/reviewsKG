@@ -6,7 +6,15 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import auth from '@react-native-firebase/auth';
 import { Colors } from 'react-native-ui-lib';
-import { CodeVerification, Home, SignIn, SignUp, UserProfile, LeaveReview } from './screens';
+import {
+  CodeVerification,
+  Home,
+  SignIn,
+  SignUp,
+  UserProfile,
+  LeaveReview,
+  MyProfile,
+} from './screens';
 import { store, useAppDispatch } from './store';
 import { fetchAllServices } from './store/main/action';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -62,7 +70,7 @@ export const App = () => {
         AsyncStorage.getItem('phone'),
         AsyncStorage.getItem('services'),
       ]);
-      dispatch(setUserInfo({ phone, services }));
+      dispatch(setUserInfo({ phone, services: services ? JSON.parse(services) : null }));
     })();
   }, []);
 
@@ -85,6 +93,7 @@ export const App = () => {
             component={LeaveReview}
             options={{ title: 'Оставить отзыв' }}
           />
+          <Tab.Screen name="MyProfile" component={MyProfile} options={{ title: 'Профиль' }} />
         </Tab.Navigator>
       ) : (
         <Stack.Navigator>

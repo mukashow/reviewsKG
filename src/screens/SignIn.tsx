@@ -1,32 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { CommonActions, NavigationProp } from '@react-navigation/native';
+import React from 'react';
+import { View } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup';
 import auth from '@react-native-firebase/auth';
-import { Incubator } from 'react-native-ui-lib';
-import { Button, Container, Toast } from '../components';
+import { Button, Container, FormInput, Text, KeyboardAvoidingView } from '../components';
+import { Logo } from '../assets/icon';
+import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
+import { AppStackParamList } from '../types';
+import { phoneNumber } from '../schema';
 
-export const SignIn = ({
-  navigation: { dispatch, navigate },
-}: {
-  navigation: NavigationProp<any>;
-}) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [status, setStatus] = useState({
-    status: 'init',
-    message: '',
+type Props = NativeStackScreenProps<AppStackParamList, 'SignIn'>;
+
+type FormValues = {
+  phone: string;
+};
+
+export const SignIn = ({ navigation: { dispatch, navigate } }: Props) => {
+  const schema = yup.object().shape({
+    phone: phoneNumber,
   });
+  const form = useForm<FormValues>({ resolver: yupResolver<yup.AnySchema>(schema) });
 
-  const signInWithPhoneNumber = async () => {
-    if (phoneNumber.length === 0) {
-      return setStatus({ status: 'error', message: 'Заполните номер телефона' });
-    }
-    if (phoneNumber.length !== 9) {
-      return setStatus({ status: 'error', message: 'Неккоректно введен номер' });
-    }
-    setStatus({ status: 'loading', message: '' });
-
+  const onSubmit: SubmitHandler<FormValues> = async values => {
+    console.log(values);
+    return;
     try {
-      const confirmation = await auth().signInWithPhoneNumber('+996' + phoneNumber);
+      const confirmation = await auth().signInWithPhoneNumber('+996');
       dispatch(
         CommonActions.reset({
           index: 0,
@@ -34,47 +35,40 @@ export const SignIn = ({
         })
       );
     } catch (e) {
-      setStatus({ status: 'error', message: 'Что то пошло не так, попробуйте позже' });
     } finally {
-      setStatus({ status: 'init', message: '' });
     }
   };
 
-  useEffect(() => {
-    setPhoneNumber(phone => phone.replace(/[^0-9]/g, ''));
-  }, [phoneNumber]);
-
   return (
-    <Container customStyle={style.root}>
-      <Toast
-        text={status.status === 'error' ? status.message : ''}
-        onDismiss={() => setStatus({ status: 'init', message: '' })}
-      />
-      <View>
-        <Incubator.TextField
-          label="+996"
-          placeholder="Введите номер телефона"
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
-          keyboardType="numeric"
-          preset="default"
-          maxLength={9}
-        />
-        <Button
-          label="Отправить код"
-          loading={status.status === 'loading'}
-          onPress={signInWithPhoneNumber}
-          style={{ marginBottom: 10 }}
-        />
-        {/*<Button label="Зарегистрироваться" onPress={() => navigate('SignUp')} hyperlink />*/}
-      </View>
-    </Container>
+    <KeyboardAvoidingView>
+      <Container
+        customStyle={{ paddingTop: 100, paddingBottom: 24, justifyContent: 'space-between' }}
+      >
+        <View style={{ alignItems: 'center' }}>
+          <Logo />
+          <Text label="Авторизация" fz={22} fw="500" mt={16} centered />
+          <Text
+            width={300}
+            label="Авторизуйтесть чтобы получить доступ к полной версии приложения"
+            color="#636378"
+            fz={14}
+            mt={4}
+            centered
+          />
+          <FormProvider {...form}>
+            <FormInput
+              placeholder="Ваш номер телефона"
+              isPhoneNumber
+              mt={24}
+              name="phone"
+              error={form.formState.errors.phone?.message}
+              keyboardType="number-pad"
+            />
+          </FormProvider>
+          <Button label="Зарегистрироваться" onPress={() => navigate('CodeVerification')} />
+        </View>
+        <Button label="Далее" onPress={form.handleSubmit(onSubmit)} />
+      </Container>
+    </KeyboardAvoidingView>
   );
 };
-
-const style = StyleSheet.create({
-  root: {
-    justifyContent: 'center',
-    paddingBottom: 200,
-  },
-});

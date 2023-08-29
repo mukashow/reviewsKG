@@ -1,26 +1,24 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Colors, Incubator, Picker, Text } from 'react-native-ui-lib';
-import { NavigationProp } from '@react-navigation/native';
+import { ScrollView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import styled from 'styled-components/native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { debounce } from 'lodash';
-import { Container } from '../components';
+import { Input, ServicesFilter, Text } from '../components';
 import { useAppDispatch, useAppSelector } from '../store';
 import { searchUsers } from '../store/main/action';
 import { Service, User } from '../store/main/types';
-import {
-  ActivityIndicator,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Logo } from '../assets/icon';
+import { AppStackParamList } from '../types';
+
+type Props = NativeStackScreenProps<AppStackParamList, 'Home'>;
 
 type Form = {
   phone: string;
   service: Service | null;
 };
 
-export const Home = ({ navigation: { navigate } }: { navigation: NavigationProp<any> }) => {
+export const Home = ({ navigation: { navigate } }: Props) => {
   const services = useAppSelector(state => state.main.services);
   const [slideOpen, setSlideOpen] = useState(false);
   const [status, setStatus] = useState('');
@@ -30,6 +28,7 @@ export const Home = ({ navigation: { navigate } }: { navigation: NavigationProp<
   });
   const [users, setUsers] = useState<User[] | null>(null);
   const dispatch = useAppDispatch();
+  const statusbarHeight = useSafeAreaInsets();
 
   const debounceHandler = useCallback(
     debounce((phone: string) => {
@@ -53,76 +52,30 @@ export const Home = ({ navigation: { navigate } }: { navigation: NavigationProp<
   }, [form]);
 
   return (
-    <Container>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Picker
-          style={{ width: '100%' }}
-          title="Сфера услуги"
-          titleStyle={{ color: Colors.$textDefault }}
-          value={form.service}
-          placeholder="Выбрать"
-          onChange={(service: Service) => setForm({ ...form, service })}
-          containerStyle={{ height: 60 }}
-        >
-          {services?.map(({ id, title }) => (
-            <Picker.Item key={id} value={id} label={title} />
-          ))}
-        </Picker>
-        <Pressable
-          style={{ marginLeft: -100, marginBottom: 30 }}
-          onPress={() => setForm(state => ({ ...state, service: null }))}
-        >
-          <Text>Очистить</Text>
-        </Pressable>
-      </View>
-      <Incubator.TextField
-        floatingPlaceholder
-        onChangeText={(phone: string) => setForm({ ...form, phone })}
-        placeholder="Введите номер телефона"
-        keyboardType="numeric"
-        preset="default"
-        maxLength={9}
-      />
-      {status === 'loading' ? <ActivityIndicator /> : null}
-      {status === 'empty' ? (
-        <Text text80 color={Colors.grey20} center>
-          Такого номера услуги на нашлось
-        </Text>
-      ) : null}
-      <FlatList
-        style={{
-          marginHorizontal: -10,
-          marginTop: -16,
-          display: status !== 'loading' ? 'flex' : 'none',
-        }}
-        contentContainerStyle={{ paddingHorizontal: 10 }}
-        data={users || []}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            key={item.id}
-            style={style.userItem}
-            onPress={() => navigate('UserProfile', { phone: item.phone })}
-          >
-            <Text text70>{item.phone}</Text>
-            <Text text80>
-              {item.services.length
-                ? item.services.map(({ title }) => title).join(', ')
-                : 'Нет добавленных услуг'}
-            </Text>
-          </TouchableOpacity>
-        )}
-      />
-    </Container>
+    <ScrollView style={{ backgroundColor: '#f9f9f9' }}>
+      <Box style={{ paddingTop: statusbarHeight.top + 48, alignItems: 'center' }}>
+        <Logo />
+        <Text label="Поможем подобрать исполнителя" width={248} fz={24} fw="500" centered mt={20} />
+        <Input isPhoneNumber placeholder="Номер телефона исполнителя" mt={24} />
+      </Box>
+      <Box style={{ marginVertical: 16 }}>
+        <Text label="Доверьте дело специалисту" fz={20} fw="500" width={150} />
+        <Text
+          label="Поможем найти подходящего специалиста из 124 000 мастеров"
+          fz={14}
+          color="#636378"
+          mt={8}
+          width={300}
+        />
+        <ServicesFilter style={{ marginTop: 24 }} list={[1, 3, 4, 5, 5]} />
+      </Box>
+    </ScrollView>
   );
 };
 
-const style = StyleSheet.create({
-  userItem: {
-    flex: 1,
-    width: '100%',
-    paddingVertical: 6,
-    borderBottomStyle: 'solid',
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.grey50,
-  },
-});
+const Box = styled.View`
+  background-color: white;
+  border-radius: 12px;
+  width: 100%;
+  padding: 24px 20px;
+`;

@@ -14,7 +14,7 @@ interface Props {
 
 type Status = 'loading' | 'error' | 'delete' | '';
 
-export const UserProfile: FC<Props> = ({ navigation, route: { params } }) => {
+export const UserProfile = ({ navigation, route: { params } }: Props) => {
   const userPhone = useAppSelector(state => state.auth.phone);
   const reviews = useAppSelector(state => state.reviews.reviews);
   const [status, setStatus] = useState<Status>('');

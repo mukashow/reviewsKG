@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { Text } from 'react-native-ui-lib';
 import { useAppDispatch, useAppSelector } from '../store';
-import { Button } from './Button';
+import { Button } from './ui/Button';
 import { addService } from '../store/services/action';
 
 interface Props extends ModalProps {

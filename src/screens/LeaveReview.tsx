@@ -1,136 +1,181 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import styled from 'styled-components/native';
 import {
-  NativeSyntheticEvent,
-  Pressable,
-  TextInputContentSizeChangeEventData,
-  View,
-} from 'react-native';
-import { Colors, Incubator, Picker, Stepper, Text } from 'react-native-ui-lib';
-import { NavigationProp, RouteProp } from '@react-navigation/native';
-import { Button, Container, Toast } from '../components';
+  AccordionSelect,
+  Button,
+  Container,
+  FormInput,
+  KeyboardAvoidingView,
+  Text,
+} from '../components';
 import { useAppDispatch, useAppSelector } from '../store';
 import { sendReview } from '../store/reviews/action';
-import { ServiceSelect } from '../store/main/types';
 import { ReviewCreateForm } from '../store/reviews/types';
+import { BackButton, Star as StarIcon } from '../assets/icon';
+import { createStackNavigator } from '@react-navigation/stack';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { FormProvider, useForm } from 'react-hook-form';
+import { Keyboard, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
+import { Service, ServiceSelect } from '../store/main/types';
+import { phoneNumber } from '../schema';
 
-interface Props {
-  navigation: NavigationProp<any>;
-  route: RouteProp<any>;
-}
+const Stack = createStackNavigator<StackParamList>();
 
-export const LeaveReview = ({ navigation, route: { params, name } }: Props) => {
-  const services = useAppSelector(state => state.main.services);
-  const [reviewTextHeight, setReviewTextHeight] = useState(19);
-  const [status, setStatus] = useState({
-    status: 'init',
-    message: '',
+type Props = NativeStackScreenProps<StackParamList, 'LeaveReviewForm'>;
+type StackParamList = {
+  LeaveReviewForm: undefined;
+  LeaveReviewSelectService: undefined;
+};
+type FormValues = {
+  serviceProviderPhone: string;
+  review: string;
+  serviceLabel: string;
+  rating: number;
+};
+
+const LeaveReviewForm = ({ navigation: { navigate }, route: { params } }: Props) => {
+  const schema = yup.object().shape({
+    serviceProviderPhone: phoneNumber,
+    review: yup.string().required('Заполните поле'),
+    serviceLabel: yup.string().required('Выберите услугу'),
   });
-
-  const [form, setForm] = useState<ReviewCreateForm>({
-    serviceProviderPhone: params?.phone || '',
-    review: '',
-    service: null,
-    rating: 0,
-  });
-  const dispatch = useAppDispatch();
-
-  const onSendReview = () => {
-    if (form.serviceProviderPhone.length !== 9) {
-      return setStatus({ status: 'error', message: 'Заполните номер телефона' });
-    }
-    if (!form.review) {
-      return setStatus({ status: 'error', message: 'Оставьте отзыв' });
-    }
-    setStatus({ status: 'loading', message: '' });
-    dispatch(sendReview(form)).then(() => {
-      if (name === 'LeaveReviewToUser') {
-        navigation.goBack();
-      }
-      setStatus({ status: 'init', message: '' });
-      navigation.navigate('Home');
-    });
-  };
-
-  useEffect(() => {
-    setForm(state => ({ ...state, phone: state.serviceProviderPhone.replace(/[^0-9]/g, '') }));
-  }, [form.serviceProviderPhone]);
-
-  useEffect(() => {
-    return navigation.addListener('blur', () => {
-      if (name === 'LeaveReview') {
-        setForm({
-          serviceProviderPhone: '',
-          review: '',
-          service: null,
-          rating: 0,
-        });
-      }
-    });
-  }, []);
+  const form = useForm<FormValues>({ resolver: yupResolver<yup.AnySchema>(schema) });
 
   return (
-    <Container customStyle={{ justifyContent: 'center' }}>
-      <Toast
-        text={status.status === 'error' ? status.message : ''}
-        onDismiss={() => setStatus({ status: 'init', message: '' })}
-      />
-      <Incubator.TextField
-        editable={name === 'LeaveReview'}
-        style={{ color: name === 'LeaveReview' ? 'unset' : Colors.grey40 }}
-        labelStyle={{ color: name === 'LeaveReview' ? Colors.grey10 : Colors.grey40 }}
-        label="+996"
-        placeholder="Номер телефона услуги"
-        value={form.serviceProviderPhone}
-        onChangeText={(serviceProviderPhone: string) =>
-          setForm(state => ({ ...state, serviceProviderPhone }))
-        }
-        keyboardType="numeric"
-        preset="default"
-        maxLength={9}
-      />
-      <Incubator.TextField
-        fieldStyle={{ height: reviewTextHeight }}
-        placeholder="Ваш отзыв"
-        onChangeText={(review: string) => setForm(state => ({ ...state, review }))}
-        onContentSizeChange={(e: NativeSyntheticEvent<TextInputContentSizeChangeEventData>) => {
-          setReviewTextHeight(e.nativeEvent.contentSize.height + 8);
-        }}
-        preset="default"
-        multiline
-      />
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-        <Picker
-          style={{ width: '100%' }}
-          title="Сфера услуги"
-          titleStyle={{ color: Colors.$textDefault }}
-          value={form.service}
-          placeholder="Выбрать"
-          onChange={(service: ServiceSelect) => setForm(state => ({ ...state, service }))}
-        >
-          {services?.map(({ id, title }) => (
-            <Picker.Item key={id} value={id} label={title} />
-          ))}
-        </Picker>
-        <Pressable
-          style={{ marginLeft: -100, marginBottom: 30 }}
-          onPress={() => setForm(state => ({ ...state, service: null }))}
-        >
-          <Text>Очистить</Text>
-        </Pressable>
-      </View>
-      <Text style={{ marginBottom: 10 }}>Рейтинг</Text>
-      <Stepper
-        minValue={1}
-        maxValue={5}
-        value={form.rating}
-        onValueChange={(rating: number) => setForm(state => ({ ...state, rating }))}
-      />
-      <Button
-        loading={status.status === 'loading'}
-        label="Добавить"
-        style={{ marginTop: 40 }}
-        onPress={onSendReview}
-      />
+    <KeyboardAvoidingView>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
+        <Container scroll style={{ paddingTop: 16, paddingBottom: 20 }}>
+          <Top>
+            <Text
+              label="Как вам работа мастера?"
+              color="#000"
+              fz={20}
+              fw="700"
+              width={160}
+              centered
+            />
+            <Text label="Оцените от 1го до 5ти" color="#636378" fz={12} mt={10} />
+            <StarGrid>
+              <Star isActive />
+              <Star />
+              <Star />
+              <Star />
+              <Star />
+            </StarGrid>
+          </Top>
+          <FormProvider {...form}>
+            <FormInput
+              name="serviceProviderPhone"
+              error={form.formState.errors.serviceProviderPhone?.message}
+              isPhoneNumber
+              placeholder="Ваш номер телефона"
+              background="#fff"
+              mb={6}
+            />
+            <FormInput
+              isSelectBtn
+              name="serviceLabel"
+              error={form.formState.errors.serviceLabel?.message}
+              placeholder="Тип услуги"
+              background="#fff"
+              mb={6}
+              onPressIn={() => navigate('LeaveReviewSelectService')}
+            />
+            <FormInput
+              name="review"
+              error={form.formState.errors.review?.message}
+              placeholder="Ваш комментарий"
+              background="#fff"
+              mb={6}
+              multiline
+              maxLength={320}
+              showCharactersCount
+              multilineHeight={200}
+            />
+            <Button
+              style={{ marginTop: 24 }}
+              label="Оставить отзыв"
+              onPress={form.handleSubmit(console.log)}
+            />
+          </FormProvider>
+        </Container>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
+  );
+};
+
+const LeaveReviewSelectService = ({
+  route: { params },
+}: NativeStackScreenProps<StackParamList, 'LeaveReviewSelectService'>) => {
+  return (
+    <Container scroll style={{ paddingVertical: 16 }}>
+      <AccordionSelect list={[1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]} />
     </Container>
   );
 };
+
+export const LeaveReview = () => {
+  const services = useAppSelector(state => state.main.services);
+  const dispatch = useAppDispatch();
+  const onSendReview = () => {};
+
+  return (
+    <>
+      <NavigationContainer
+        independent
+        theme={{
+          ...DefaultTheme,
+          colors: { ...DefaultTheme.colors, background: 'transparent' },
+        }}
+      >
+        <Stack.Navigator
+          screenOptions={({ navigation }) => ({
+            headerLeft: ({ canGoBack }) =>
+              canGoBack ? (
+                <TouchableOpacity
+                  onPress={() => navigation.goBack()}
+                  style={{ padding: 5, marginLeft: -5 }}
+                >
+                  <BackButton />
+                </TouchableOpacity>
+              ) : null,
+            headerTitleStyle: { fontSize: 16 },
+            cardStyle: { backgroundColor: '#F9F9F9' },
+          })}
+        >
+          <Stack.Screen
+            name="LeaveReviewForm"
+            component={LeaveReviewForm}
+            options={{ title: 'Оставьте отзыв' }}
+          />
+          <Stack.Screen
+            name="LeaveReviewSelectService"
+            component={LeaveReviewSelectService}
+            options={{ title: 'Тип услуги' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </>
+  );
+};
+
+const Top = styled.View`
+  border-radius: 12px;
+  background: #fff;
+  padding: 20px;
+  align-items: center;
+  margin-bottom: 24px;
+`;
+
+const StarGrid = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  margin-top: 20px;
+`;
+
+const Star = styled(StarIcon)`
+  margin: 0 6px;
+`;

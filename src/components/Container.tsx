@@ -1,32 +1,45 @@
 import React, { FC } from 'react';
-import { ScrollView, ScrollViewProps, StyleSheet, View, ViewStyle } from 'react-native';
+import { ScrollViewProps, View, ViewStyle } from 'react-native';
+import styled from 'styled-components/native';
 
 interface Props {
   children: React.ReactNode;
   customStyle?: ViewStyle;
+  style?: ViewStyle;
   scroll?: boolean;
   scrollProps?: ScrollViewProps;
+  bottomSheet?: boolean;
 }
 
-export const Container: FC<Props> = ({ children, scroll, customStyle = {}, scrollProps = {} }) => {
+export const Container: FC<Props> = ({
+  children,
+  scroll,
+  customStyle = {},
+  style,
+  scrollProps = {},
+  bottomSheet,
+}) => {
+  const bottomSheetStyle = { paddingTop: 16, paddingBottom: 40, flex: 0 };
+
   if (scroll) {
     return (
-      <ScrollView
-        contentContainerStyle={{ paddingVertical: 16 }}
-        style={[style.root, customStyle, { paddingVertical: 0 }]}
+      <Root
+        contentContainerStyle={bottomSheet ? { ...style, ...bottomSheetStyle } : style}
+        style={customStyle}
         {...scrollProps}
       >
         {children}
-      </ScrollView>
+      </Root>
     );
   }
-  return <View style={[style.root, customStyle]}>{children}</View>;
+  return (
+    <Root as={View} style={[customStyle, style, bottomSheet ? bottomSheetStyle : {}]}>
+      {children}
+    </Root>
+  );
 };
 
-const style = StyleSheet.create({
-  root: {
-    paddingVertical: 16,
-    paddingHorizontal: 10,
-    flex: 1,
-  },
-});
+const Root = styled.ScrollView`
+  padding: 0 20px;
+  flex: 1;
+`;

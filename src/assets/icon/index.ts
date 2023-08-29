@@ -1,1 +1,12 @@
 export { Trash } from './Trash';
+export { Phone } from './Phone';
+export { Flag } from './Flag';
+export { Logo } from './Logo';
+export { BackButton } from './BackButton';
+export { Home } from './Home';
+export { Services } from './Services';
+export { Bag } from './Bag';
+export { Profile } from './Profile';
+export { Close } from './Close';
+export { Star } from './Star';
+export { ArrowRight } from './ArrowRight';

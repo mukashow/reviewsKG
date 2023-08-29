@@ -1,68 +1,40 @@
-import React, { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { CommonActions, NavigationProp } from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
-import { Button, Incubator, Picker, PickerValue } from 'react-native-ui-lib';
-import { Container, Toast } from '../components';
+import React from 'react';
+import { View } from 'react-native';
+import { Button, Container, Input, KeyboardAvoidingView, Text, Toast } from '../components';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import styled from 'styled-components/native';
+import { Link } from '@react-navigation/native';
+import { AppStackParamList } from '../types';
 
-export const SignUp = ({ navigation: { dispatch } }: { navigation: NavigationProp<any> }) => {
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [error, setError] = useState('');
-  const [category, setCategory] = useState<PickerValue | null>(null);
+type Props = NativeStackScreenProps<AppStackParamList, 'SignUp'>;
 
-  const signInWithPhoneNumber = async () => {
-    if (phoneNumber.length === 0) return setError('Заполните номер телефона');
-    if (phoneNumber.length !== 9) return setError('Неккоректно введен номер');
-    if (!category) return setError('Выберите категорию');
-
-    try {
-      const confirmation = await auth().signInWithPhoneNumber('+996' + phoneNumber);
-      dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'CodeVerification', params: { confirmation, category } }],
-        })
-      );
-    } catch (e) {
-      setError('Что то пошло не так, попробуйте позже');
-    }
-  };
-
-  useEffect(() => {
-    setPhoneNumber(phone => phone.replace(/[^0-9]/g, ''));
-  }, [phoneNumber]);
+export const SignUp = ({ navigation: { navigate } }: Props) => {
+  const onSubmit = async () => {};
 
   return (
-    <Container customStyle={style.root}>
-      <Toast text={error} onDismiss={setError} />
-      <View>
-        <Incubator.TextField
-          label="+996"
-          placeholder="Введите номер телефона"
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
-          keyboardType="numeric"
-          preset="default"
-          maxLength={9}
-        />
-        <Picker
-          title="Категория к которой относится ваша услуга"
-          value={category}
-          placeholder="Выбрать"
-          onChange={setCategory}
-        >
-          <Picker.Item value="auto" label="Транспорт" />
-          <Picker.Item value="house" label="Недвижимость" />
-        </Picker>
-        <Button label="Отправить код" enableShadow onPress={signInWithPhoneNumber} />
-      </View>
-    </Container>
+    <KeyboardAvoidingView>
+      <Root>
+        <View>
+          <Text label="Осталось совсем немного" fz={22} fw="500" />
+          <Text label="Дополните ваши данные" color="#636378" mt={4} />
+          <Input mt={24} placeholder="Как вас зовут?" />
+        </View>
+        <View>
+          <Button label="Начать!" onPress={onSubmit} />
+          <Button
+            label="Регистрация как исполнитель"
+            mt={12}
+            variant="gray"
+            onPress={() => navigate('SignUpAsPerformer')}
+          />
+        </View>
+      </Root>
+    </KeyboardAvoidingView>
   );
 };
 
-const style = StyleSheet.create({
-  root: {
-    justifyContent: 'center',
-    paddingBottom: 200,
-  },
-});
+const Root = styled(Container)`
+  padding-top: 28px;
+  padding-bottom: 24px;
+  justify-content: space-between;
+`;

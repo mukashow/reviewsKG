@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { Colors, Dialog, PanningProvider, Text } from 'react-native-ui-lib';
 import { StyleSheet, View } from 'react-native';
-import { Button } from './Button';
+import { Button } from './ui/Button';
 
 interface Props {
   visible: boolean;

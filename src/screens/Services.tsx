@@ -9,11 +9,11 @@ import { deleteService } from '../store/services/action';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../types';
 
-type Props = NativeStackScreenProps<AppStackParamList, 'MyProfile', 'Stack'>;
+type Props = NativeStackScreenProps<AppStackParamList, 'Services', 'Stack'>;
 
 type Status = 'loading' | 'error' | 'delete' | '';
 
-export const MyProfile: FC<Props> = ({ navigation, route: { params } }) => {
+export const Services: FC<Props> = ({ navigation, route: { params } }) => {
   const { userServices, userPhone } = useAppSelector(state => ({
     userPhone: state.auth.phone,
     userServices: state.auth.services,

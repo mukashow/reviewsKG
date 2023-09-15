@@ -11,7 +11,7 @@ export const SignUpAsPerformer = ({ navigation: { navigate } }: Props) => {
 
   return (
     <KeyboardAvoidingView>
-      <Root scroll>
+      <Root scroll customStyle={{ backgroundColor: 'white' }}>
         <Text label="Добро пожаловать" fz={20} fw="500" />
         <Text
           label="Добавьте как можно больше данных о себе"

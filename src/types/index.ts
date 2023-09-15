@@ -20,4 +20,5 @@ export type AppStackParamList = {
   NullComponent: undefined;
   Services: undefined;
   LeaveReviewHome: undefined;
+  SearchResult: undefined;
 };

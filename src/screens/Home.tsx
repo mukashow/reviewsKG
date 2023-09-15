@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import styled from 'styled-components/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { debounce } from 'lodash';
-import { Input, ServicesFilter, Text } from '../components';
+import { Input, KeyboardAvoidingView, ServicesFilter, Text } from '../components';
 import { useAppDispatch, useAppSelector } from '../store';
 import { searchUsers } from '../store/main/action';
 import { Service, User } from '../store/main/types';
@@ -52,30 +52,38 @@ export const Home = ({ navigation: { navigate } }: Props) => {
   }, [form]);
 
   return (
-    <ScrollView style={{ backgroundColor: '#f9f9f9' }}>
-      <Box style={{ paddingTop: statusbarHeight.top + 48, alignItems: 'center' }}>
-        <Logo />
-        <Text label="Поможем подобрать исполнителя" width={248} fz={24} fw="500" centered mt={20} />
-        <Input isPhoneNumber placeholder="Номер телефона исполнителя" mt={24} />
-      </Box>
-      <Box style={{ marginVertical: 16 }}>
-        <Text label="Доверьте дело специалисту" fz={20} fw="500" width={150} />
-        <Text
-          label="Поможем найти подходящего специалиста из 124 000 мастеров"
-          fz={14}
-          color="#636378"
-          mt={8}
-          width={300}
-        />
-        <ServicesFilter style={{ marginTop: 24 }} list={[1, 3, 4, 5, 5]} />
-      </Box>
-    </ScrollView>
+    <KeyboardAvoidingView>
+      <ScrollView>
+        <Box style={{ paddingTop: statusbarHeight.top + 48, alignItems: 'center' }}>
+          <Logo />
+          <Text
+            label="Поможем подобрать исполнителя"
+            width={248}
+            fz={24}
+            fw="500"
+            centered
+            mt={20}
+          />
+          <Input isPhoneNumber placeholder="Номер телефона исполнителя" mt={24} />
+        </Box>
+        <Box style={{ marginTop: 16 }}>
+          <Text label="Доверьте дело специалисту" fz={20} fw="500" width={150} />
+          <Text
+            label="Поможем найти подходящего специалиста из 124 000 мастеров"
+            fz={14}
+            color="#636378"
+            mt={8}
+            width={300}
+          />
+          <ServicesFilter style={{ marginTop: 24 }} list={[1, 3, 4, 5, 5]} />
+        </Box>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const Box = styled.View`
   background-color: white;
   border-radius: 12px;
-  width: 100%;
   padding: 24px 20px;
 `;

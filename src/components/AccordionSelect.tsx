@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components/native';
 import { BackButton } from '../assets/icon';
 import { Image, LayoutAnimation, View, ViewProps } from 'react-native';
@@ -19,14 +19,56 @@ const conf = {
   },
 };
 
-interface Props extends ViewProps {
-  list: Object[];
+export type Option = {
+  id: number;
+  title: string;
+};
+
+type OptionGroup = {
+  id: number;
+  title: string;
+  list: Option[];
+};
+
+interface CommonProps {
+  onSelect: (option: Option) => void;
+  variant?: 'default' | 'gray';
+  readonly?: boolean;
+  selectedService: Option;
 }
 
-const Item = ({ index, arr }: { index: number; arr: Object[] }) => {
+interface Props extends ViewProps, CommonProps {
+  list: OptionGroup[];
+}
+
+interface ItemProps extends CommonProps {
+  title: string;
+  index: number;
+  list: Option[];
+  arr: OptionGroup[];
+}
+
+const Item = ({
+  index,
+  list,
+  title,
+  onSelect,
+  arr,
+  selectedService,
+  readonly,
+  variant = 'default',
+}: ItemProps) => {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const isActive = !!list.find(
+      ({ id, title }) => selectedService.title === title && selectedService.id === id
+    );
+    setOpen(isActive);
+  }, []);
+
   return (
-    <Root style={{ marginBottom: index !== arr.length - 1 ? 8 : 0 }}>
+    <Root style={{ marginBottom: index !== arr.length - 1 ? 8 : 0 }} $variant={variant}>
       <Top
         onPress={() => {
           LayoutAnimation.configureNext(conf);
@@ -35,40 +77,56 @@ const Item = ({ index, arr }: { index: number; arr: Object[] }) => {
       >
         <Icon source={require('../assets/images/image.png')} />
         <View>
-          <Text label="Работа по дому" color="#151515" fw="500" />
-          <Text label="Работа по дому" color="#4D4D4D" fz={12} />
+          <Text label={title} color="#151515" fw="500" />
         </View>
-        <Arrow $open={open} width={20} height={20} />
+        <Arrow $open={open} svg={{ width: 20, height: 20 }} />
       </Top>
       {open && (
         <List>
-          <ListItem>
-            <Text label="Выбрать все (324)" color="#000" />
-            <Checkbox checked />
-          </ListItem>
-          <ListItem>
-            <Text label="Выбрать все (324)" color="#000" />
-            <Checkbox checked={false} />
-          </ListItem>
+          {list.map(({ id, title }) => (
+            <ListItem $variant={variant} key={id} onPress={() => onSelect({ id, title })}>
+              <Text label={title} color="#000" />
+              {!readonly && (
+                <Checkbox checked={selectedService.title === title && selectedService.id === id} />
+              )}
+            </ListItem>
+          ))}
         </List>
       )}
     </Root>
   );
 };
 
-export const AccordionSelect = ({ list, ...props }: Props) => {
+export const AccordionSelect = ({
+  list,
+  onSelect,
+  selectedService,
+  variant,
+  readonly = false,
+  ...props
+}: Props) => {
   return (
     <View {...props}>
-      {list.map((_, index, arr) => (
-        <Item key={index} index={index} arr={arr} />
+      {list.map(({ id, title, list }, index, arr) => (
+        <Item
+          readonly={readonly}
+          variant={variant}
+          key={id}
+          selectedService={selectedService}
+          index={index}
+          arr={arr}
+          title={title}
+          list={list}
+          onSelect={onSelect}
+        />
       ))}
     </View>
   );
 };
 
-const Root = styled.View`
+const Root = styled.View<{ $variant: CommonProps['variant'] }>`
   border-radius: 10px;
-  background: #fff;
+  background: ${({ $variant }) => ($variant === 'gray' ? '#f9f9f9' : '#fff')};
   overflow: hidden;
 `;
 
@@ -96,10 +154,10 @@ const List = styled.View`
   border-top-color: #eee;
 `;
 
-const ListItem = styled.Pressable`
+const ListItem = styled.Pressable<{ $variant: CommonProps['variant'] }>`
   margin-top: 4px;
   border-radius: 8px;
-  background: #f9f9f9;
+  background: ${({ $variant }) => ($variant === 'gray' ? '#fff' : '#f9f9f9')};
   padding: 8px;
   flex-direction: row;
   justify-content: space-between;

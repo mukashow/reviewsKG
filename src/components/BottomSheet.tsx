@@ -1,39 +1,50 @@
-import React, { Dispatch, RefObject, SetStateAction, useEffect, useMemo } from 'react';
+import React, { RefObject, useMemo, useRef } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useWindowDimensions } from 'react-native';
 import {
   BottomSheetModal,
   BottomSheetBackdrop,
   useBottomSheetDynamicSnapPoints,
-  BottomSheetDraggableView,
+  BottomSheetView,
 } from '@gorhom/bottom-sheet';
+import ActionSheet, { ActionSheetRef } from 'react-native-actions-sheet';
 import styled from 'styled-components/native';
 import { Text } from './ui/Text';
 import { Close } from '../assets/icon';
-import { useAnimatedStyle } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useWindowDimensions, View } from 'react-native';
-import { Container } from './Container';
 
 interface Props {
   bottomSheetRef: RefObject<BottomSheetModal>;
+  // actionSheetRef: RefObject<ActionSheetRef>;
   children: React.ReactNode;
   snapPoints?: Array<string | number>;
   index?: number;
+  label?: string;
 }
-const CONTENT_HEIGHT = 'CONTENT_HEIGHT';
 
-export const BottomSheet = ({ bottomSheetRef, children, snapPoints, index = 0 }: Props) => {
+export const BottomSheet = ({
+  bottomSheetRef,
+  // actionSheetRef,
+  children,
+  snapPoints,
+  label = '',
+  index = 0,
+}: Props) => {
   const { height: windowHeight } = useWindowDimensions();
-  const initialSnapPoints = useMemo(() => ['100%'], [snapPoints]);
+  const initialSnapPoints = useMemo(() => ['CONTENT_HEIGHT'], [snapPoints]);
   const { top } = useSafeAreaInsets();
+  const { animatedHandleHeight, animatedSnapPoints, animatedContentHeight, handleContentLayout } =
+    useBottomSheetDynamicSnapPoints(initialSnapPoints);
 
   return (
     <BottomSheetModal
       index={index}
       topInset={top}
-      snapPoints={initialSnapPoints}
+      snapPoints={animatedSnapPoints}
+      handleHeight={animatedHandleHeight}
+      contentHeight={animatedContentHeight}
       enablePanDownToClose
       keyboardBehavior="interactive"
-      handleStyle={{ paddingBottom: 0, paddingTop: 4 }}
+      handleComponent={() => null}
       ref={bottomSheetRef}
       backgroundStyle={{ backgroundColor: '#F9F9F9', borderRadius: 12 }}
       backdropComponent={props => (
@@ -45,28 +56,27 @@ export const BottomSheet = ({ bottomSheetRef, children, snapPoints, index = 0 }:
         />
       )}
     >
-      <View style={{ flex: 1 }}>
+      <Root onLayout={handleContentLayout}>
         <Header>
-          <Text label="Асан Асанов" color="#090816" fz={16} fw="500" />
-          <CloseButton onPress={() => bottomSheetRef.current?.close()} />
+          <Text label={label} color="#090816" fz={16} fw="500" />
+          <Close onPress={() => bottomSheetRef.current?.close()} />
         </Header>
-        <View style={{ flex: 1 }}>{children}</View>
-      </View>
+        {children}
+      </Root>
     </BottomSheetModal>
+    // <ActionSheet ref={actionSheetRef}>{children}</ActionSheet>
   );
 };
 
-const Header = styled.View`
-  padding: 12px 14px 18px 14px;
-  align-items: center;
-  position: relative;
-  border-bottom-style: solid;
-  border-bottom-color: #f1f1f1;
-  border-bottom-width: 1px;
+const Root = styled(BottomSheetView)`
+  padding: 20px 16px 32px;
+  flex: 1;
 `;
 
-const CloseButton = styled(Close)`
-  position: absolute;
-  top: 10px;
-  right: 20px;
+const Header = styled.View`
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  margin-bottom: 18px;
 `;

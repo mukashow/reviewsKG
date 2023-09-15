@@ -1,14 +1,9 @@
 import React from 'react';
-import { Path, Svg } from 'react-native-svg';
-import { Color } from '../../types';
+import { Path, Svg, SvgProps } from 'react-native-svg';
 
-interface Props {
-  fill: Color;
-}
-
-export const Profile = ({ fill }: Props) => {
+export const Profile = ({ fill = '#8B8B8B', width = 19, height = 19 }: SvgProps) => {
   return (
-    <Svg width="19" height="19" viewBox="0 0 19 19" fill="none">
+    <Svg width={width} height={height} viewBox="0 0 19 19" fill="none">
       <Path
         fillRule="evenodd"
         clipRule="evenodd"

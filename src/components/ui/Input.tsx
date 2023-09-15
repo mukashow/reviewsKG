@@ -143,6 +143,8 @@ interface FieldStyle {
 }
 
 const Container = styled.View<ContainerStyle>`
+  width: 100%;
+
   ${({ $mb, $mt, $mr, $ml }) => css`
     margin-bottom: ${$mb}px;
     margin-top: ${$mt}px;

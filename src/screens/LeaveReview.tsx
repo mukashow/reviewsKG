@@ -1,48 +1,71 @@
-import React from 'react';
-import { DefaultTheme, NavigationContainer } from '@react-navigation/native';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { Keyboard, TouchableWithoutFeedback } from 'react-native';
 import styled from 'styled-components/native';
+import { createNativeStackNavigator, NativeStackScreenProps } from '@react-navigation/native-stack';
+import {
+  CommonActions,
+  NavigationContainer,
+  NavigationProp,
+  useFocusEffect,
+  useNavigation,
+} from '@react-navigation/native';
+import {
+  FormProvider,
+  SubmitHandler,
+  useForm,
+  UseFormReturn,
+  UseFormSetValue,
+  UseFormTrigger,
+} from 'react-hook-form';
+import * as yup from 'yup';
+import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
 import {
   AccordionSelect,
   Button,
   Container,
   FormInput,
+  Header,
   KeyboardAvoidingView,
   Text,
 } from '../components';
-import { useAppDispatch, useAppSelector } from '../store';
-import { sendReview } from '../store/reviews/action';
-import { ReviewCreateForm } from '../store/reviews/types';
-import { BackButton, Star as StarIcon } from '../assets/icon';
-import { createStackNavigator } from '@react-navigation/stack';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { FormProvider, useForm } from 'react-hook-form';
-import { Keyboard, TouchableOpacity, TouchableWithoutFeedback } from 'react-native';
-import * as yup from 'yup';
-import { yupResolver } from '@hookform/resolvers/yup/dist/yup';
-import { Service, ServiceSelect } from '../store/main/types';
+import { Star as StarIcon } from '../assets/icon';
 import { phoneNumber } from '../schema';
+import { Option } from '../components/AccordionSelect';
+import { AppStackParamList } from '../types';
+import { MyTheme } from '../App';
 
-const Stack = createStackNavigator<StackParamList>();
+const Stack = createNativeStackNavigator<StackParamList>();
 
-type Props = NativeStackScreenProps<StackParamList, 'LeaveReviewForm'>;
-type StackParamList = {
-  LeaveReviewForm: undefined;
-  LeaveReviewSelectService: undefined;
-};
 type FormValues = {
   serviceProviderPhone: string;
   review: string;
   serviceLabel: string;
+  service: number;
   rating: number;
 };
+type StackParamList = {
+  LeaveReviewForm: undefined;
+  LeaveReviewSelectService: undefined;
+};
 
-const LeaveReviewForm = ({ navigation: { navigate }, route: { params } }: Props) => {
-  const schema = yup.object().shape({
-    serviceProviderPhone: phoneNumber,
-    review: yup.string().required('Заполните поле'),
-    serviceLabel: yup.string().required('Выберите услугу'),
-  });
-  const form = useForm<FormValues>({ resolver: yupResolver<yup.AnySchema>(schema) });
+interface LeaveReviewFormProps extends NativeStackScreenProps<StackParamList, 'LeaveReviewForm'> {
+  goBack: () => void;
+  form: UseFormReturn<FormValues>;
+}
+
+interface LeaveReviewSelectServiceProps
+  extends NativeStackScreenProps<StackParamList, 'LeaveReviewSelectService'> {
+  setValue: UseFormSetValue<FormValues>;
+  selectedService: Option;
+  trigger: UseFormTrigger<FormValues>;
+}
+
+const LeaveReviewForm = ({ navigation: { navigate }, goBack, form }: LeaveReviewFormProps) => {
+  const rating = form.watch('rating');
+
+  const onSubmit: SubmitHandler<FormValues> = values => {
+    goBack();
+  };
 
   return (
     <KeyboardAvoidingView>
@@ -59,11 +82,13 @@ const LeaveReviewForm = ({ navigation: { navigate }, route: { params } }: Props)
             />
             <Text label="Оцените от 1го до 5ти" color="#636378" fz={12} mt={10} />
             <StarGrid>
-              <Star isActive />
-              <Star />
-              <Star />
-              <Star />
-              <Star />
+              {[...Array(5)].fill(undefined).map((_, index) => (
+                <Star
+                  key={index}
+                  isActive={rating > index}
+                  onPress={() => form.setValue('rating', index + 1)}
+                />
+              ))}
             </StarGrid>
           </Top>
           <FormProvider {...form}>
@@ -98,7 +123,7 @@ const LeaveReviewForm = ({ navigation: { navigate }, route: { params } }: Props)
             <Button
               style={{ marginTop: 24 }}
               label="Оставить отзыв"
-              onPress={form.handleSubmit(console.log)}
+              onPress={form.handleSubmit(onSubmit)}
             />
           </FormProvider>
         </Container>
@@ -108,57 +133,87 @@ const LeaveReviewForm = ({ navigation: { navigate }, route: { params } }: Props)
 };
 
 const LeaveReviewSelectService = ({
-  route: { params },
-}: NativeStackScreenProps<StackParamList, 'LeaveReviewSelectService'>) => {
+  trigger,
+  setValue,
+  selectedService,
+  navigation: { goBack },
+}: LeaveReviewSelectServiceProps) => {
+  const onSelect = ({ id, title }: Option) => {
+    setValue('service', id);
+    setValue('serviceLabel', title);
+    goBack();
+    trigger('serviceLabel');
+  };
+
   return (
     <Container scroll style={{ paddingVertical: 16 }}>
-      <AccordionSelect list={[1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]} />
+      <AccordionSelect
+        onSelect={onSelect}
+        selectedService={selectedService}
+        list={[
+          { id: 1, title: 'car', list: [{ id: 3, title: 'service' }] },
+          { id: 2, title: 'human', list: [{ id: 4, title: 'heart' }] },
+          { id: 3, title: 'travel', list: [{ id: 5, title: 'bag' }] },
+        ]}
+      />
     </Container>
   );
 };
 
-export const LeaveReview = () => {
-  const services = useAppSelector(state => state.main.services);
-  const dispatch = useAppDispatch();
-  const onSendReview = () => {};
+export const LeaveReview = ({
+  navigation: { navigate },
+}: NativeStackScreenProps<AppStackParamList, 'LeaveReview'>) => {
+  const schema = yup.object().shape({
+    serviceProviderPhone: phoneNumber,
+    review: yup.string().required('Заполните поле'),
+    serviceLabel: yup.string().required('Выберите услугу'),
+  });
+  const form = useForm<FormValues>({
+    resolver: yupResolver<yup.AnySchema>(schema),
+    defaultValues: { rating: 0 },
+  });
+  const selectedService = { id: form.watch('service'), title: form.watch('serviceLabel') };
+  const navigation = useRef<NavigationProp<StackParamList> | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        form.reset();
+        navigation.current!.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'LeaveReviewForm' }],
+          })
+        );
+      };
+    }, [])
+  );
 
   return (
-    <>
-      <NavigationContainer
-        independent
-        theme={{
-          ...DefaultTheme,
-          colors: { ...DefaultTheme.colors, background: 'transparent' },
-        }}
-      >
-        <Stack.Navigator
-          screenOptions={({ navigation }) => ({
-            headerLeft: ({ canGoBack }) =>
-              canGoBack ? (
-                <TouchableOpacity
-                  onPress={() => navigation.goBack()}
-                  style={{ padding: 5, marginLeft: -5 }}
-                >
-                  <BackButton />
-                </TouchableOpacity>
-              ) : null,
-            headerTitleStyle: { fontSize: 16 },
-            cardStyle: { backgroundColor: '#F9F9F9' },
-          })}
+    <NavigationContainer independent theme={MyTheme}>
+      <Stack.Navigator screenOptions={{ header: Header }}>
+        <Stack.Screen name="LeaveReviewForm" options={{ title: 'Оставьте отзыв' }}>
+          {props => <LeaveReviewForm {...props} goBack={() => navigate('Home')} form={form} />}
+        </Stack.Screen>
+        <Stack.Screen
+          name="LeaveReviewSelectService"
+          options={{ title: 'Тип услуги' }}
+          listeners={nav => {
+            navigation.current = nav.navigation;
+            return {};
+          }}
         >
-          <Stack.Screen
-            name="LeaveReviewForm"
-            component={LeaveReviewForm}
-            options={{ title: 'Оставьте отзыв' }}
-          />
-          <Stack.Screen
-            name="LeaveReviewSelectService"
-            component={LeaveReviewSelectService}
-            options={{ title: 'Тип услуги' }}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </>
+          {props => (
+            <LeaveReviewSelectService
+              {...props}
+              selectedService={selectedService}
+              trigger={form.trigger}
+              setValue={form.setValue}
+            />
+          )}
+        </Stack.Screen>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 };
 

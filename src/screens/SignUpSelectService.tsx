@@ -10,11 +10,16 @@ export const SignUpSelectService = ({ navigation: { dispatch } }: Props) => {
   const onSubmit = async () => {};
 
   return (
-    <KeyboardAvoidingView style={{ backgroundColor: '#F9F9F9' }}>
+    <KeyboardAvoidingView>
       <Root scroll>
         <Text label="Ваша специальность" fz={20} fw="500" />
         <Text label="Чем вы занимаетесь?" color="#636378" mt={8} width={270} />
-        <AccordionSelect list={[1, 2, 4, 5, 5, 5]} style={{ marginTop: 24 }} />
+        <AccordionSelect
+          list={[{ list: [], id: 1, title: 'title' }]}
+          style={{ marginTop: 24 }}
+          onSelect={() => {}}
+          selectedService={{ id: 1, title: '' }}
+        />
       </Root>
       <Bottom>
         <Button label="Завершить регистрацию" />

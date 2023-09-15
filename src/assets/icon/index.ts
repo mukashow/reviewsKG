@@ -10,3 +10,8 @@ export { Profile } from './Profile';
 export { Close } from './Close';
 export { Star } from './Star';
 export { ArrowRight } from './ArrowRight';
+export { Tel } from './Tel';
+export { Whatsapp } from './Whatsapp';
+export { SortTop } from './SortTop';
+export { SortDown } from './SortDown';
+export { Camera } from './Camera';

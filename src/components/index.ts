@@ -12,3 +12,5 @@ export { AccordionSelect } from './AccordionSelect';
 export { ServicesFilter } from './ServicesFilter';
 export { BottomSheet } from './BottomSheet';
 export { CreateReviewBtn } from './CreateReviewBtn';
+export { Review } from './Review';
+export { Header } from './Header';

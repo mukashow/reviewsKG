@@ -8,3 +8,4 @@ export { UserProfile } from './UserProfile';
 export { MyProfile } from './MyProfile';
 export { LeaveReview } from './LeaveReview';
 export { Services } from './Services';
+export { SearchResult } from './SearchResult';

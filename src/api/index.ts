@@ -1,9 +1,10 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import auth from '@react-native-firebase/auth';
+import { API_URL } from '@env';
 
 export const api = axios.create({
-  baseURL: 'http://195.38.164.33:5001',
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

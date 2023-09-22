@@ -2,40 +2,42 @@ import React from 'react';
 import { View } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-import auth from '@react-native-firebase/auth';
 import { Button, Container, FormInput, Text, KeyboardAvoidingView } from '../components';
 import { Logo } from '../assets/icon';
-import { FormProvider, SubmitHandler, useForm } from 'react-hook-form';
-import { AppStackParamList } from '../types';
+import { AuthStackParamList } from '../types';
 import { phoneNumber } from '../schema';
+import { useAppDispatch } from '../store';
+import { signIn } from '../store/auth/action';
 
-type Props = NativeStackScreenProps<AppStackParamList, 'SignIn'>;
+type Props = NativeStackScreenProps<AuthStackParamList, 'SignIn'>;
 
 type FormValues = {
   phone: string;
 };
 
-export const SignIn = ({ navigation: { dispatch, navigate } }: Props) => {
+export const SignIn = ({ navigation }: Props) => {
   const schema = yup.object().shape({
     phone: phoneNumber,
   });
   const form = useForm<FormValues>({ resolver: yupResolver<yup.AnySchema>(schema) });
+  const dispatch = useAppDispatch();
 
   const onSubmit: SubmitHandler<FormValues> = async values => {
-    console.log(values);
-    return;
     try {
-      const confirmation = await auth().signInWithPhoneNumber('+996');
-      dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'CodeVerification', params: { confirmation } }],
-        })
-      );
-    } catch (e) {
-    } finally {
+      await dispatch(signIn(values)).unwrap();
+      // navigation.dispatch(
+      //   CommonActions.reset({
+      //     index: 0,
+      //     routes: [{ name: 'CodeVerification' }],
+      //   })
+      // );
+    } catch (e: any) {
+      for (const key in e) {
+        form.setError(key as keyof FormValues, { message: e[key] });
+      }
     }
   };
 
@@ -65,7 +67,6 @@ export const SignIn = ({ navigation: { dispatch, navigate } }: Props) => {
               keyboardType="number-pad"
             />
           </FormProvider>
-          <Button label="Зарегистрироваться" onPress={() => navigate('CodeVerification')} />
         </View>
         <Button label="Далее" onPress={form.handleSubmit(onSubmit)} />
       </Container>

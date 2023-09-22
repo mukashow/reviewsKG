@@ -4,6 +4,7 @@ import { BackButton } from '../assets/icon';
 import { Image, LayoutAnimation, View, ViewProps } from 'react-native';
 import { Text } from './ui/Text';
 import { Checkbox } from './ui/Checkbox';
+import { ThumbService } from '../store/service/types';
 
 const conf = {
   duration: 200,
@@ -19,22 +20,15 @@ const conf = {
   },
 };
 
-export type Option = {
-  id: number;
-  title: string;
-};
-
 type OptionGroup = {
-  id: number;
-  title: string;
-  list: Option[];
-};
+  list: ThumbService[];
+} & ThumbService;
 
 interface CommonProps {
-  onSelect: (option: Option) => void;
+  onSelect: (option: ThumbService) => void;
   variant?: 'default' | 'gray';
   readonly?: boolean;
-  selectedService: Option;
+  selectedService?: number;
 }
 
 interface Props extends ViewProps, CommonProps {
@@ -44,7 +38,7 @@ interface Props extends ViewProps, CommonProps {
 interface ItemProps extends CommonProps {
   title: string;
   index: number;
-  list: Option[];
+  list: ThumbService[];
   arr: OptionGroup[];
 }
 
@@ -61,9 +55,7 @@ const Item = ({
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const isActive = !!list.find(
-      ({ id, title }) => selectedService.title === title && selectedService.id === id
-    );
+    const isActive = !!list.find(({ id }) => selectedService === id);
     setOpen(isActive);
   }, []);
 
@@ -86,9 +78,7 @@ const Item = ({
           {list.map(({ id, title }) => (
             <ListItem $variant={variant} key={id} onPress={() => onSelect({ id, title })}>
               <Text label={title} color="#000" />
-              {!readonly && (
-                <Checkbox checked={selectedService.title === title && selectedService.id === id} />
-              )}
+              {!readonly && <Checkbox checked={selectedService === id} />}
             </ListItem>
           ))}
         </List>

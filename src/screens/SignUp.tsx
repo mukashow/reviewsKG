@@ -1,12 +1,11 @@
 import React from 'react';
 import { View } from 'react-native';
-import { Button, Container, Input, KeyboardAvoidingView, Text, Toast } from '../components';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import styled from 'styled-components/native';
-import { Link } from '@react-navigation/native';
-import { AppStackParamList } from '../types';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { Button, Container, Input, KeyboardAvoidingView, Text } from '../components';
+import { AuthStackParamList } from '../types';
 
-type Props = NativeStackScreenProps<AppStackParamList, 'SignUp'>;
+type Props = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
 
 export const SignUp = ({ navigation: { navigate } }: Props) => {
   const onSubmit = async () => {};

@@ -161,7 +161,7 @@ const LeaveReviewSelectService = ({
 };
 
 export const LeaveReview = ({
-  navigation: { navigate },
+  navigation: { navigate, addListener },
 }: NativeStackScreenProps<AppStackParamList, 'LeaveReview'>) => {
   const schema = yup.object().shape({
     serviceProviderPhone: phoneNumber,
@@ -191,18 +191,17 @@ export const LeaveReview = ({
 
   return (
     <NavigationContainer independent theme={MyTheme}>
-      <Stack.Navigator screenOptions={{ header: Header }}>
+      <Stack.Navigator
+        screenOptions={{ header: Header }}
+        screenListeners={nav => {
+          navigation.current = nav.navigation;
+          return {};
+        }}
+      >
         <Stack.Screen name="LeaveReviewForm" options={{ title: 'Оставьте отзыв' }}>
           {props => <LeaveReviewForm {...props} goBack={() => navigate('Home')} form={form} />}
         </Stack.Screen>
-        <Stack.Screen
-          name="LeaveReviewSelectService"
-          options={{ title: 'Тип услуги' }}
-          listeners={nav => {
-            navigation.current = nav.navigation;
-            return {};
-          }}
-        >
+        <Stack.Screen name="LeaveReviewSelectService" options={{ title: 'Тип услуги' }}>
           {props => (
             <LeaveReviewSelectService
               {...props}

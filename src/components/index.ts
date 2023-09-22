@@ -1,8 +1,5 @@
 export { Container } from './Container';
-export { Toast } from './Toast';
 export { Button } from './ui/Button';
-export { Modal } from './Modal';
-export { SlideUp } from './SlideUp';
 export { Text } from './ui/Text';
 export { Input } from './ui/Input';
 export { FormInput } from './ui/Input';

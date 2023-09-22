@@ -1,26 +1,23 @@
-import { useAppDispatch, useAppSelector } from '../../store';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ScrollView, View } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { deleteService } from '../../store/services/action';
-import { fetchReviews } from '../../store/reviews/action';
-import { ScrollView, View } from 'react-native';
 import { AboutWorker, Box, Header, ProfileIcon, UserName } from '../SearchResult';
-import { Profile, SortDown, SortTop, Star } from '../../assets/icon';
 import { AccordionSelect, BottomSheet, Button, Review, Text } from '../../components';
+import { Profile, SortDown, SortTop, Star } from '../../assets/icon';
+import { useAppDispatch, useAppSelector } from '../../store';
+import { deleteService } from '../../store/service/action';
+import { fetchMyReviews, fetchReviewSortKeys } from '../../store/review/action';
+import { ThumbService } from '../../store/service/types';
 import { StackParamList } from './index';
 
-type Status = 'loading' | 'error' | 'delete' | '';
 type Props = NativeStackScreenProps<StackParamList, 'ProfileHome'>;
 
-export const ProfileHome = ({ navigation: { navigate }, route: { params } }: Props) => {
-  const { userServices, userPhone } = useAppSelector(state => ({
-    userPhone: state.auth.phone,
-    userServices: state.auth.services,
-  }));
-  const [refreshing, setRefreshing] = useState(false);
+export const ProfileHome = ({ navigation: { navigate, setParams }, route: { params } }: Props) => {
+  const user = useAppSelector(state => state.auth.user);
+  const services = useAppSelector(state => state.service.services);
   const reviews = useAppSelector(state => state.reviews.reviews);
-  const [status, setStatus] = useState<Status>('');
+  const sort = useAppSelector(state => state.reviews.sort);
   const dispatch = useAppDispatch();
   const sortSheetRef = useRef<BottomSheetModal>(null);
 
@@ -28,12 +25,24 @@ export const ProfileHome = ({ navigation: { navigate }, route: { params } }: Pro
     dispatch(deleteService(id));
   };
 
+  const myService = useMemo<ThumbService[]>(() => {
+    if (!user || !services) return [];
+    // if (!user.service?.parent?.id) return [];
+    if (!user.service?.parent?.id) return [];
+
+    return services.find(({ id }) => id === user.service!.parent.id)!.children;
+  }, [user, services]);
+
   useEffect(() => {
-    setStatus('loading');
-    dispatch(fetchReviews({ phone: userPhone }))
-      .then(() => setStatus(''))
-      .catch(() => setStatus('error'));
+    dispatch(fetchReviewSortKeys());
   }, []);
+
+  useEffect(() => {
+    const param = Object.entries(params).reduce((str, entry, index) => {
+      return str + `${index !== 0 ? '&' : ''}${entry[0]}=${entry[1]}`;
+    }, '');
+    dispatch(fetchMyReviews(param));
+  }, [params]);
 
   return (
     <ScrollView style={{ paddingTop: 16 }}>
@@ -43,21 +52,19 @@ export const ProfileHome = ({ navigation: { navigate }, route: { params } }: Pro
             <Profile width={24} height={24} />
           </ProfileIcon>
           <UserName>
-            <Text label="Асан Асанов" fz={20} fw="500" />
+            <Text label={user.phone} fz={20} fw="500" />
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Star isActive style={{ marginRight: 2, marginLeft: 8 }} width={16} height={16} />
               <Text label="4,5" fz={16} color="#414455" />
             </View>
           </UserName>
         </Header>
-        <AboutWorker>
-          <Text label="О мастере" fz={16} mb={4} fw="500" />
-          <Text
-            color="#636378"
-            fz={12}
-            label="Мастер может многое сделает много за деньги поправит и расскажет"
-          />
-        </AboutWorker>
+        {user.description && (
+          <AboutWorker>
+            <Text label="О мастере" fz={16} mb={4} fw="500" />
+            <Text color="#636378" fz={12} label={user.description} />
+          </AboutWorker>
+        )}
         <Button
           label="Редактировать"
           style={{ height: 36 }}
@@ -73,11 +80,8 @@ export const ProfileHome = ({ navigation: { navigate }, route: { params } }: Pro
           readonly
           variant="gray"
           onSelect={() => {}}
-          selectedService={{ id: 1, title: 'a' }}
-          list={[
-            { id: 1, title: 'car', list: [{ id: 3, title: 'service' }] },
-            { id: 3, title: 'travel', list: [{ id: 5, title: 'bag' }] },
-          ]}
+          selectedService={user?.service?.id}
+          list={services?.map(({ children, ...rest }) => ({ ...rest, list: children })) || []}
         />
         <Button
           label="Редактировать"
@@ -103,19 +107,24 @@ export const ProfileHome = ({ navigation: { navigate }, route: { params } }: Pro
             onPress={sortSheetRef.current?.present}
           />
         </View>
-        <Review
-          review="loh"
-          service={1}
-          serviceProviderPhone="043"
-          author="belya"
-          rating={3}
-          id={2}
-          createdAt="5353"
-        />
+        {reviews?.result.map(review => (
+          <Review {...review} key={review.id} />
+        ))}
       </Box>
       <BottomSheet bottomSheetRef={sortSheetRef} label="Сортировка">
-        <Button label="Сначала новые" variant="filter" Icon={SortDown} mb={8} />
-        <Button label="Сначала старые" variant="filter" Icon={SortTop} mb={8} />
+        {sort?.map(({ id, title, key }) => (
+          <Button
+            onPress={() => {
+              setParams({ ...params, sort: { key, title } });
+              sortSheetRef.current!.close();
+            }}
+            key={id}
+            label={title}
+            variant="filter"
+            Icon={key.match(/createdAt_desc|rating_desc/) ? SortDown : SortTop}
+            mb={8}
+          />
+        ))}
       </BottomSheet>
     </ScrollView>
   );

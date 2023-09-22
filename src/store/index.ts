@@ -1,14 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector, TypedUseSelectorHook } from 'react-redux';
-import main from './main/slice';
-import reviews from './reviews/slice';
+import reviews from './review/slice';
 import auth from './auth/slice';
+import service from './service/slice';
 
 export const store = configureStore({
   reducer: {
-    main,
     reviews,
     auth,
+    service,
   },
 });
 

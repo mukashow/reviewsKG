@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { fetchAllServices } from './action';
 import { Service } from './types';
+import { fetchServices } from './action';
 
 type State = {
   services: Service[] | null;
@@ -10,17 +10,17 @@ const initialState: State = {
   services: null,
 };
 
-export const main = createSlice({
-  name: 'main',
+export const service = createSlice({
+  name: 'service',
   initialState,
   reducers: {},
   extraReducers: builder => {
-    builder.addCase(fetchAllServices.fulfilled, (state, { payload }) => {
+    builder.addCase(fetchServices.fulfilled, (state, { payload }) => {
       state.services = payload;
     });
   },
 });
 
-export const {} = main.actions;
+export const {} = service.actions;
 
-export default main.reducer;
+export default service.reducer;

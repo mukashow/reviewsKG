@@ -1,27 +1,27 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { api } from '../../api';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootState } from '../index';
-import { setUserInfo } from '../auth/slice';
+import { Service } from './types';
+
+export const fetchServices = createAsyncThunk<Service[]>('service/fetchServices', async () => {
+  return (await api('services/')).data;
+});
 
 export const fetchMyServices = createAsyncThunk(
   'main/fetchMyServices',
   async (_, { getState, dispatch }) => {
     try {
       const { auth } = getState() as RootState;
-      const { data } = await api('/users/services');
-      await Promise.all([
-        AsyncStorage.setItem('phone', auth.phone),
-        AsyncStorage.setItem('services', JSON.stringify(data)),
-      ]);
-      const [phone, services] = await Promise.all([
-        AsyncStorage.getItem('phone'),
-        AsyncStorage.getItem('services'),
-      ]);
-      dispatch(setUserInfo({ phone, services: JSON.parse(services!) }));
-    } catch (e) {
-      console.log(e);
-    }
+      const { data } = await api('/users/service');
+      // await Promise.all([
+      //   AsyncStorage.setItem('phone', auth.phone),
+      //   AsyncStorage.setItem('services', JSON.stringify(data)),
+      // ]);
+      // const [phone, services] = await Promise.all([
+      //   AsyncStorage.getItem('phone'),
+      //   AsyncStorage.getItem('services'),
+      // ]);
+    } catch (e) {}
   }
 );
 

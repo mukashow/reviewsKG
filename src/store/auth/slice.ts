@@ -1,28 +1,35 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { Service } from '../main/types';
+import { checkAuth, signIn } from './action';
+import { User } from './types';
 
 type State = {
-  services: Service[] | null;
-  phone: string;
+  isAuth: boolean;
+  user: User;
 };
 
 const initialState: State = {
-  services: null,
-  phone: '',
+  isAuth: false,
+  user: { phone: '', description: null, service: null },
 };
 
-export const main = createSlice({
+export const auth = createSlice({
   name: 'auth',
   initialState,
-  reducers: {
-    setUserInfo: (state, { payload }) => {
-      state.services = payload.services;
-      state.phone = payload.phone;
-    },
+  reducers: {},
+  extraReducers: builder => {
+    builder.addCase(checkAuth.fulfilled, (state, { payload }) => {
+      state.isAuth = !!payload;
+      if (payload) {
+        state.user = payload;
+      }
+    });
+    builder.addCase(signIn.fulfilled, (state, { payload }) => {
+      state.isAuth = true;
+      state.user = payload;
+    });
   },
-  extraReducers: builder => {},
 });
 
-export const { setUserInfo } = main.actions;
+export const {} = auth.actions;
 
-export default main.reducer;
+export default auth.reducer;

@@ -6,10 +6,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { debounce } from 'lodash';
 import { Input, KeyboardAvoidingView, ServicesFilter, Text } from '../components';
 import { useAppDispatch, useAppSelector } from '../store';
-import { searchUsers } from '../store/main/action';
-import { Service, User } from '../store/main/types';
 import { Logo } from '../assets/icon';
 import { AppStackParamList } from '../types';
+import { Service } from '../store/service/types';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'Home'>;
 
@@ -19,26 +18,25 @@ type Form = {
 };
 
 export const Home = ({ navigation: { navigate } }: Props) => {
-  const services = useAppSelector(state => state.main.services);
   const [slideOpen, setSlideOpen] = useState(false);
   const [status, setStatus] = useState('');
   const [form, setForm] = useState<Form>({
     phone: '',
     service: null,
   });
-  const [users, setUsers] = useState<User[] | null>(null);
+  const [users, setUsers] = useState<[] | null>(null);
   const dispatch = useAppDispatch();
   const statusbarHeight = useSafeAreaInsets();
 
   const debounceHandler = useCallback(
     debounce((phone: string) => {
       if (phone.length > 2) {
-        return dispatch(searchUsers({ phone, service: form.service }))
-          .unwrap()
-          .then(users => {
-            setUsers(users);
-            setStatus(users!.length ? '' : 'empty');
-          });
+        // return dispatch(searchUsers({ phone, service: form.service }))
+        //   .unwrap()
+        //   .then(users => {
+        //     setUsers(users);
+        //     setStatus(users!.length ? '' : 'empty');
+        //   });
       }
       setUsers([]);
       setStatus('');

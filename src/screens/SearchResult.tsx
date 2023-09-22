@@ -5,11 +5,10 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { debounce } from 'lodash';
 import { AccordionSelect, BottomSheet, Button, Input, Review, Text } from '../components';
 import { useAppDispatch, useAppSelector } from '../store';
-import { searchUsers } from '../store/main/action';
-import { Service, User } from '../store/main/types';
 import { Phone, Profile, Star, Whatsapp, Tel, SortTop, SortDown } from '../assets/icon';
 import { AppStackParamList } from '../types';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { Service } from '../store/service/types';
 
 type Props = NativeStackScreenProps<AppStackParamList, 'SearchResult'>;
 
@@ -19,13 +18,12 @@ type Form = {
 };
 
 export const SearchResult = ({ navigation: { navigate } }: Props) => {
-  const services = useAppSelector(state => state.main.services);
   const [status, setStatus] = useState('');
   const [form, setForm] = useState<Form>({
     phone: '',
     service: null,
   });
-  const [users, setUsers] = useState<User[] | null>(null);
+  const [users, setUsers] = useState<[] | null>(null);
   const dispatch = useAppDispatch();
   const contactSheetRef = useRef<BottomSheetModal>(null);
   const sortSheetRef = useRef<BottomSheetModal>(null);
@@ -34,12 +32,12 @@ export const SearchResult = ({ navigation: { navigate } }: Props) => {
   const debounceHandler = useCallback(
     debounce((phone: string) => {
       if (phone.length > 2) {
-        return dispatch(searchUsers({ phone, service: form.service }))
-          .unwrap()
-          .then(users => {
-            setUsers(users);
-            setStatus(users!.length ? '' : 'empty');
-          });
+        // return dispatch(searchUsers({ phone, service: form.service }))
+        //   .unwrap()
+        //   .then(users => {
+        //     setUsers(users);
+        //     setStatus(users!.length ? '' : 'empty');
+        //   });
       }
       setUsers([]);
       setStatus('');

@@ -1,11 +1,10 @@
 import React, { FC, useEffect, useState } from 'react';
 import { ActivityIndicator, RefreshControl, StyleSheet, View } from 'react-native';
-import { Colors, Text } from 'react-native-ui-lib';
-import { Button, Container, SlideUp } from '../components';
+import { Button, Container } from '../components';
 import { useAppDispatch, useAppSelector } from '../store';
-import { fetchReviews } from '../store/reviews/action';
+import { fetchMyReviews } from '../store/review/action';
 import { Trash } from '../assets/icon';
-import { deleteService } from '../store/services/action';
+import { deleteService } from '../store/service/action';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { AppStackParamList } from '../types';
 
@@ -30,7 +29,7 @@ export const Services: FC<Props> = ({ navigation, route: { params } }) => {
 
   useEffect(() => {
     setStatus('loading');
-    dispatch(fetchReviews({ phone: userPhone }))
+    dispatch(fetchMyReviews({ phone: userPhone }))
       .then(() => setStatus(''))
       .catch(() => setStatus('error'));
   }, []);
@@ -44,71 +43,30 @@ export const Services: FC<Props> = ({ navigation, route: { params } }) => {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              dispatch(fetchReviews({ phone: userPhone })).then(() => setRefreshing(false));
+              dispatch(fetchMyReviews({ phone: userPhone })).then(() => setRefreshing(false));
             }}
           />
         ),
       }}
     >
-      <Text style={{ marginBottom: 5 }} text65>
-        Услуги
-      </Text>
       <View style={{ marginBottom: 10 }}>
-        {userServices?.length ? (
-          <View>
-            {userServices.map(({ id, title }) => (
-              <View key={id} style={{ paddingVertical: 10 }}>
-                <Text text70>
-                  {title} <Trash onPress={() => onDeleteService(id)} />
-                </Text>
-              </View>
-            ))}
-          </View>
-        ) : (
-          <Text text80 color={Colors.grey20} center style={{ marginVertical: 10 }}>
-            Нет услуг
-          </Text>
-        )}
+        {/*{userServices?.length ? (*/}
+        {/*  <View>*/}
+        {/*    {userServices.map(({ id, title }) => (*/}
+        {/*      <View key={id} style={{ paddingVertical: 10 }}>*/}
+        {/*        <Text text70>*/}
+        {/*          {title} <Trash onPress={() => onDeleteService(id)} />*/}
+        {/*        </Text>*/}
+        {/*      </View>*/}
+        {/*    ))}*/}
+        {/*  </View>*/}
+        {/*) : (*/}
+        {/*  <Text text80 color={Colors.grey20} center style={{ marginVertical: 10 }}>*/}
+        {/*    Нет услуг*/}
+        {/*  </Text>*/}
+        {/*)}*/}
         <Button label="Добавить" style={{ marginTop: 10 }} onPress={() => setServicesModal(true)} />
       </View>
-      <SlideUp visible={servicesModal} setVisible={setServicesModal} />
-      <Text style={{ marginBottom: 5 }} text65>
-        Отзывы
-      </Text>
-      {status === 'loading' ? <ActivityIndicator /> : null}
-      {reviews && !reviews.length ? (
-        <Text text80 color={Colors.grey20} center style={{ marginTop: 20 }}>
-          Список отзывов пуст
-        </Text>
-      ) : null}
-      {reviews?.map(({ author, review, rating, createdAt, id }, index, arr) => (
-        <View
-          key={id}
-          style={[
-            style.review,
-            {
-              paddingBottom: index === arr.length - 1 ? 0 : 8,
-              borderBottomWidth: index === arr.length - 1 ? 0 : 1,
-            },
-          ]}
-        >
-          <View style={{ flex: 1 }}>
-            <View style={style.reviewTop}>
-              <Text text70 style={style.reviewTitle}>
-                {author}
-              </Text>
-              <Text style={{ fontSize: 12 }}>{new Date(createdAt).toLocaleDateString()}</Text>
-            </View>
-            <Text style={{ marginVertical: 5 }}>{review}</Text>
-            {rating ? (
-              <Text style={{ color: Colors.yellow20 }}>
-                {'★'.repeat(rating)}
-                {'☆'.repeat(5 - rating)}
-              </Text>
-            ) : null}
-          </View>
-        </View>
-      ))}
     </Container>
   );
 };
@@ -118,7 +76,6 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 8,
-    borderBottomColor: Colors.grey50,
   },
   reviewTop: {
     flexDirection: 'row',

@@ -1,23 +1,33 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { api } from '../../api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setUserInfo } from './slice';
-import { FirebaseAuthTypes } from '@react-native-firebase/auth';
+import { api } from '../../api';
+import { AuthResponse, User } from './types';
 
-export const signIn = createAsyncThunk(
-  'main/signIn',
-  async (user: FirebaseAuthTypes.User, { dispatch }) => {
-    const token = await user.getIdToken();
-    await AsyncStorage.setItem('token', token);
+export const signIn = createAsyncThunk<User, { phone: string }>(
+  'auth/signIn',
+  async (obj, { rejectWithValue }) => {
     try {
-      const { data } = await api.post('/auth');
+      const res = (await api.post('auth/', { phone: '+996' + obj.phone })).data as AuthResponse;
+      const { access, refresh, ...user } = res;
       await Promise.all([
-        AsyncStorage.setItem('phone', data.phone),
-        AsyncStorage.setItem('services', JSON.stringify(data.services)),
+        AsyncStorage.setItem('user', JSON.stringify({ ...user })),
+        AsyncStorage.setItem('access', access),
+        AsyncStorage.setItem('refresh', refresh),
       ]);
-      dispatch(setUserInfo({ phone: data.phone, services: data.services }));
-    } catch (e) {
-      console.log(e);
+      return user as User;
+    } catch (e: any) {
+      return rejectWithValue(e.response.data.errors);
     }
   }
 );
+
+export const checkAuth = createAsyncThunk<User | null>('auth/checkAuth', async () => {
+  try {
+    const token = await AsyncStorage.getItem('access');
+    if (!token) return null;
+    const user = JSON.parse((await AsyncStorage.getItem('user')) || '');
+    return user as User;
+  } catch (e) {
+    return null;
+  }
+});
